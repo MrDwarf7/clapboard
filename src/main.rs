@@ -54,44 +54,9 @@ async fn main() -> Result<()> {
             // Doesn't need to be mutable
             let entries = entries;
             // Iterate over sorted entries
-            for entry in entries {
-                if entry.path().is_dir() {
-                    let timestamp = entry.file_name().into_string().unwrap_or_default();
-                    let text_files =
-                        vec!["UTF8_STRING", "TEXT", "text.plain", "text.html", "STRING"];
-                    let mut found_file = false;
-                    let mut content = String::new();
-                    for file_name in text_files {
-                        let textual_representation = entry.path().join(file_name);
+            iterate_entries(entries.as_slice(), &mut data)
+                .unwrap_or_else(|e| panic!("Failed to iterate entries: {e}"));
 
-                        if textual_representation.exists() {
-                            let mut file = File::open(&textual_representation).unwrap();
-                            if file.read_to_string(&mut content).is_ok() {
-                                found_file = true;
-                                break;
-                            }
-                        }
-                    }
-                    if found_file {
-                        data.insert(
-                            content
-                                .trim()
-                                .to_string()
-                                .replace("\n", " ")
-                                .chars()
-                                .take(50) // Avoid long text
-                                .collect(),
-                            timestamp.to_string(),
-                        );
-                    } else {
-                        // If no file was found, proceed with the else logic
-                        println!("No textfile found for: {}", timestamp.to_string());
-                        data.entry(timestamp.to_string())
-                            .or_insert_with(|| timestamp.to_string());
-                    }
-                }
-            }
-            for (key, value) in favorites {
                 data.entry(key.parse().unwrap())
                     .or_insert_with(|| value.as_str().unwrap().to_string());
             }
@@ -205,6 +170,49 @@ async fn listen_to_clipboard(paste_type: &str, cache_dir: PathBuf, history_size:
         }
         clean_history(&cache_dir, history_size).unwrap();
     }
+}
+
+// TODO: @optimization: This function can be optimized further by using async file operations
+pub fn iterate_entries(entries: &[fs::DirEntry], data_map: &mut IndexMap<String, String>) -> Result<()> {
+    for entry in entries {
+        if entry.path().is_dir() {
+            let timestamp = entry.file_name().into_string().unwrap_or_default();
+            let text_files = vec!["UTF8_STRING", "TEXT", "text.plain", "text.html", "STRING"];
+            let mut found_file = false;
+            let mut content = String::new();
+            for file_name in text_files {
+                let textual_representation = entry.path().join(file_name);
+
+                if textual_representation.exists() {
+                    let mut file = File::open(&textual_representation).unwrap();
+                    if file.read_to_string(&mut content).is_ok() {
+                        found_file = true;
+                        break;
+                    }
+                }
+            }
+            if found_file {
+                data_map.insert(
+                    content
+                        .trim()
+                        .to_string()
+                        .replace("\n", " ")
+                        .chars()
+                        .take(50) // Avoid long text
+                        .collect(),
+                    timestamp.to_string(),
+                );
+            } else {
+                // If no file was found, proceed with the else logic
+                println!("No textfile found for: {timestamp}");
+                data_map
+                    .entry(timestamp.to_string())
+                    .or_insert_with(|| timestamp.to_string());
+            }
+        }
+    }
+
+    Ok(())
 }
 
 fn clean_history(directory: &Path, max: usize) -> io::Result<()> {
