@@ -1,24 +1,4 @@
-use clap::Parser;
-use indexmap::IndexMap;
-use std::path::Path;
-use std::path::PathBuf;
-use std::{
-    fs,
-    io::{self, Read, Write},
-    process::{Command, Stdio},
-};
-use std::{
-    fs::File,
-    io::copy,
-    time::{SystemTime, UNIX_EPOCH},
-};
-use tokio::task;
-use toml::Value;
-use wayland_clipboard_listener::WlClipboardPasteStream;
-use wayland_clipboard_listener::WlListenType;
-use wl_clipboard_rs::copy::{MimeSource, MimeType, Options, Source};
-use wl_clipboard_rs::paste::{get_contents, ClipboardType, Seat};
-use xdg::BaseDirectories;
+use std::fs::DirEntry;
 
 /// Clapboard, a clipboard manager for Wayland
 #[derive(Parser, Debug)]
@@ -28,6 +8,7 @@ struct Args {
     #[arg(short, long, num_args(0..=1), default_missing_value = "both")]
     record: Option<String>,
 }
+use clapboard::*;
 
 #[tokio::main]
 async fn main() {
