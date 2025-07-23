@@ -1,18 +1,10 @@
 use std::fs::DirEntry;
 
-/// Clapboard, a clipboard manager for Wayland
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    /// Record mode, choose between "primary", "clipboard", or the default "both"
-    #[arg(short, long, num_args(0..=1), default_missing_value = "both")]
-    record: Option<String>,
-}
 use clapboard::*;
 
 #[tokio::main]
 async fn main() {
-    let args = Args::parse();
+    let cli = Cli::new();
 
     let xdg_dirs = BaseDirectories::with_prefix("clapboard").unwrap();
     let config_path = xdg_dirs
