@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
             }
         }
 
-        // If no record mode is specified
+        // If no recording_mode is specified
         None => {
             let mut data: IndexMap<String, String> = IndexMap::new();
 
@@ -106,16 +106,17 @@ async fn main() -> Result<()> {
                                     .to_string_lossy()
                                     .to_string()
                                     .replacen(".", "/", 1);
-                                fs::read(&path).ok().map(|contents| MimeSource {
-                                    source: Source::Bytes(contents.into()),
-                                    mime_type: MimeType::Specific(mime_type),
+                                fs::read(&path).ok().map(|contents| {
+                                    MimeSource {
+                                        source:    Source::Bytes(contents.into()),
+                                        mime_type: MimeType::Specific(mime_type),
+                                    }
                                 })
                             })
                             .collect();
 
                     if !sources.is_empty() {
-                        opts.copy_multi(sources)
-                            .expect("Failed to copy to clipboard");
+                        opts.copy_multi(sources).expect("Failed to copy to clipboard");
                     }
                 }
             }
@@ -132,10 +133,7 @@ async fn listen_to_clipboard(paste_type: &str, cache_dir: PathBuf, history_size:
     .unwrap();
 
     for context in stream.paste_stream().flatten().flatten() {
-        let timestamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis();
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
         for mime in context.mime_types {
             match get_contents(
                 match paste_type {

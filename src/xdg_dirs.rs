@@ -69,7 +69,7 @@ impl From<&str> for XdgDirType {
             "config" => XdgDirType::Config,
             "data" => XdgDirType::Data,
             "cache" => XdgDirType::Cache,
-            _ => panic!("Unknown XDG directory type: {s}"),
+            _ => unimplemented!("XdgDirType::From<&str> called with unknown type: {s}"),
         }
     }
 }
@@ -80,7 +80,7 @@ impl From<String> for XdgDirType {
             "config" => XdgDirType::Config,
             "data" => XdgDirType::Data,
             "cache" => XdgDirType::Cache,
-            _ => panic!("Unknown XDG directory type: {s}"),
+            _ => panic!("XdgDirType::From<String> called with unknown type: {s}"),
         }
     }
 }
@@ -93,7 +93,7 @@ impl FromStr for XdgDirType {
             "config" => Ok(XdgDirType::Config),
             "data" => Ok(XdgDirType::Data),
             "cache" => Ok(XdgDirType::Cache),
-            _ => Err(Error::Generic(format!("Unknown XDG directory type: {s}"))),
+            _ => Err(Error::Generic(format!("Unknown XdgDirType: {s}"))),
         }
     }
 }
