@@ -1,16 +1,22 @@
 [package]
-name = "clapboard"
+name    = "clapboard"
 version = "1.0.5"
-edition = "2021"
+edition = "2024"
 license = "GPL-3.0"
+readme  = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-xdg = "2.5.2"
-toml = "0.8.22"
-wl-clipboard-rs = "0.9.2"
-wayland-clipboard-listener = "0.2.6"
-clap = { version = "4.5.39", features = ["derive"] }
-tokio = { version = "1.45.1", features = ["full"] }
-indexmap = { version = "2.9.0", features = ["std"] }
+anstyle                    = "1.0.11"
+clap                       = { version = "4.5.39", features = ["cargo", "derive", "env"] }
+indexmap                   = { version = "2.9.0", features = ["std"] }
+tokio                      = { version = "1.45.1", features = ["full"] }
+toml                       = "0.9.2"
+wayland-clipboard-listener = "0.3.1"
+wl-clipboard-rs            = "0.9.2"
+xdg                        = "3.0.0"
+thiserror                  = "2.0.12"
+config                     = "0.15.13"
+serde                      = { version = "1.0.219", features = ["derive"] }
+
