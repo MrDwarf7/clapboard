@@ -1,3 +1,5 @@
+cargo-features = ["codegen-backend", "profile-rustflags", "trim-paths"]
+
 [package]
 name    = "clapboard"
 version = "1.0.5"
@@ -20,3 +22,59 @@ thiserror                  = "2.0.12"
 config                     = "0.15.13"
 serde                      = { version = "1.0.219", features = ["derive"] }
 
+
+[profile.dev]
+opt-level     = 1
+codegen-units = 256
+incremental   = true
+# rustflags        = ["-Zthreads=16"]
+codegen-backend  = "cranelift"
+debug            = "full"
+debug-assertions = true
+overflow-checks  = true
+strip            = "none"      # true | false | "none" | "symbols" | "debuginfo" ## Leave off @ w. THIS IS NOT OBFUSCATION.
+panic            = "abort"     # "unwind" | "abort"
+lto              = "off"       # "false" ### # true | false | "off" | "thin" | "fat" ## Can't use with cranelift yet
+trim-paths       = "none"
+# tune-cpu         = "native"
+
+######################################################################################################################################################
+
+[profile.release]
+opt-level     = 3
+codegen-units = 1
+incremental   = false
+# rustflags        = ["-Zthreads=16"]
+codegen-backend  = "cranelift"               # May break deps.
+debug            = "none"
+debug-assertions = false
+overflow-checks  = false                     # debatable
+strip            = "symbols"                 # true | false | "none" | "symbols" | "debuginfo" ## Leave off @ w. THIS IS NOT OBFUSCATION.
+panic            = "unwind"
+lto              = "off"                     # true | false | "off" | "thin" | "fat" ## Can't use with cranelift yet
+trim-paths       = ["diagnostics", "object"]
+# tune-cpu         = "native"
+
+
+[profile.dev.package."*"]
+inherits        = "release"
+codegen-backend = "cranelift" #### May break deps. for external crates
+
+[profile.release.package."*"]
+inherits        = "release"
+codegen-backend = "cranelift" #### May break deps. for external crates??????
+
+######################################################################################################################################################
+######################################################################################################################################################
+
+# Lint levels / priorities/priority
+# 0 = forbid
+# 1 = deny
+# 2 = warn
+# 3 = allow
+[lints.rust]
+unsafe_code = { level = "forbid", priority = 0 }
+# unsafe_code = "forbid"
+
+[lints.clippy]
+enum_glob_use = { level = "warn", priority = 2 }
