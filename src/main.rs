@@ -25,11 +25,7 @@ async fn main() -> Result<()> {
             let tasks: Vec<JoinHandle<()>> = listeners
                 .iter()
                 .map(|&paste_type| {
-                    task::spawn(listen_to_clipboard(
-                        paste_type,
-                        cache_dir.clone(),
-                        history_size,
-                    ))
+                    task::spawn(listen_to_clipboard(paste_type, cache_dir.clone(), history_size))
                 })
                 .collect();
 
@@ -53,19 +49,21 @@ async fn main() -> Result<()> {
 
             // Doesn't need to be mutable
             let entries = entries;
+
             // Iterate over sorted entries
             iterate_entries(entries.as_slice(), &mut data)
                 .unwrap_or_else(|e| panic!("Failed to iterate entries: {e}"));
 
+            for (key, favourite_value) in favorites.clone() {
                 data.entry(key.parse().unwrap())
-                    .or_insert_with(|| value.as_str().unwrap().to_string());
+                    .or_insert_with(|| favourite_value.as_str().to_string());
             }
 
             let input = data.keys().cloned().collect::<Vec<_>>().join("\n");
-            let command_name = launcher.unwrap()[0].as_str().unwrap();
+            let command_name = launcher[0].as_str();
             let mut command = Command::new(command_name);
-            for arg in &launcher.unwrap()[1..] {
-                command.arg(arg.as_str().unwrap());
+            for arg in &launcher[1..] {
+                command.arg(arg.as_str());
             }
 
             let output = command
@@ -76,11 +74,11 @@ async fn main() -> Result<()> {
                     child.stdin.as_mut().unwrap().write_all(input.as_bytes())?;
                     child.wait_with_output()
                 })
-            .unwrap_or_else(|_| panic!("Cannot start your launcher, please confirm you have {} installed or configure another one", command_name));
+            .unwrap_or_else(|_| panic!("Cannot start your launcher, please confirm you have {command_name} installed or configure another one"));
 
             let mut result = String::from_utf8_lossy(&output.stdout).into_owned();
             result.pop(); // Remove trailing new line
-            if result.len() > 0 {
+            if !result.is_empty() {
                 let mut opts = Options::new();
                 opts.foreground(true); // We need to keep the process alive for pasting to work
                 if favorites.contains_key(&result) {
@@ -154,18 +152,15 @@ async fn listen_to_clipboard(paste_type: &str, cache_dir: PathBuf, history_size:
                     match File::create(&file_path) {
                         Ok(mut file) => {
                             if let Err(e) = copy(&mut reader, &mut file) {
-                                eprintln!("Failed to copy content to {}: {}", file_path, e);
+                                eprintln!("Failed to copy content to {file_path}: {e}");
                             }
                         }
                         Err(e) => {
-                            eprintln!("Failed to create file {}: {}", file_path, e);
+                            eprintln!("Failed to create file {file_path}: {e}");
                         }
                     }
                 }
-                Err(err) => eprintln!(
-                    "Clipboard {paste_type:?} warning for mime type {}: {}",
-                    mime, err
-                ),
+                Err(err) => eprintln!("Clipboard {paste_type:?} warning for mime type {mime}: {err}"),
             }
         }
         clean_history(&cache_dir, history_size).unwrap();
