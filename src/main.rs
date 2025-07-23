@@ -1,57 +1,28 @@
 use std::fs::DirEntry;
 
+use clapboard::configuration::Configuration;
 use clapboard::*;
+use tokio::task::JoinHandle;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     let cli = Cli::new();
 
-    let xdg_dirs = BaseDirectories::with_prefix("clapboard").unwrap();
-    let config_path = xdg_dirs
-        .place_config_file("config.toml")
-        .expect("cannot create configuration directory");
+    let conf = Configuration::try_new().unwrap_or_default();
 
-    let toml_string = fs::read_to_string(config_path).unwrap_or(String::from(""));
-    let value: Value = toml::from_str(&toml_string).unwrap();
+    let cache_dir = conf.defaults.cache_dir;
 
-    let default_launcher = vec!["tofi", "--fuzzy-match=true", "--prompt-text=clapboard: "];
+    let launcher = conf.core.launcher;
+    let history_size = conf.core.history_size;
+    let favorites = conf.favourites.items;
 
-    let default_launcher_values: Vec<Value> = default_launcher
-        .iter()
-        .map(|x| Value::String(x.to_string()))
-        .collect();
-    let default_launcher_value = Value::Array(default_launcher_values);
-    let launcher = value
-        .get("launcher")
-        .unwrap_or_else(|| &default_launcher_value)
-        .as_array();
-
-    let history_size = value
-        .get("history_size")
-        .and_then(|v| v.as_integer())
-        .unwrap_or(50) as usize;
-
-    let default_favorites_value = Value::Table(toml::value::Table::new());
-    let favorites = value
-        .get("favorites")
-        .unwrap_or_else(|| &default_favorites_value)
-        .as_table()
-        .unwrap();
-
-    let cache_dir = xdg_dirs.get_cache_home();
-
-    match args.record {
+    match cli.recording_mode {
         Some(record) => {
             println!("Clapboard recording {record}...");
-            let listeners = match record.as_str() {
-                "primary" => vec!["primary"],
-                "clipboard" => vec!["clipboard"],
-                "both" => vec!["primary", "clipboard"],
-                _ => vec![],
-            };
+            let listeners: Vec<&str> = record.into();
 
             // Spawn tasks for each listener
-            let tasks: Vec<_> = listeners
+            let tasks: Vec<JoinHandle<()>> = listeners
                 .iter()
                 .map(|&paste_type| {
                     task::spawn(listen_to_clipboard(
@@ -67,17 +38,21 @@ async fn main() {
                 let _ = task.await;
             }
         }
+
+        // If no record mode is specified
         None => {
             let mut data: IndexMap<String, String> = IndexMap::new();
 
-            let mut entries: Vec<_> = fs::read_dir(&cache_dir)
+            let mut entries = fs::read_dir(&cache_dir)
                 .unwrap() // Handle the Result from read_dir
                 .flatten() // Flatten the Result<Option<DirEntry>> to just DirEntry
-                .collect(); // Collect into a vector of DirEntry
+                .collect::<Vec<DirEntry>>(); // Collect into a vector of DirEntry
 
             // Sort entries by file name (ascending order)
             entries.sort_by(|a, b| b.file_name().cmp(&a.file_name()));
 
+            // Doesn't need to be mutable
+            let entries = entries;
             // Iterate over sorted entries
             for entry in entries {
                 if entry.path().is_dir() {
@@ -183,6 +158,7 @@ async fn main() {
             }
         }
     }
+    Ok(())
 }
 
 async fn listen_to_clipboard(paste_type: &str, cache_dir: PathBuf, history_size: usize) {
