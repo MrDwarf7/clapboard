@@ -22,7 +22,4 @@ pub enum Error {
 
     #[error("Clipboard error: {0}")]
     ClipboardError(#[from] wl_clipboard_rs::copy::Error),
-
-    #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
 }
