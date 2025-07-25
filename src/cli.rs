@@ -18,10 +18,10 @@ styles=get_styles(),
 )]
 #[rustfmt::skip]
 pub struct Cli {
-    /// Record mode, choose between "primary", "clipboard", or the default "both"
-    // #[arg(short, long, default_missing_value = "both")]
-    #[arg(value_enum,name = "record_mode",short = 'r',long = "record",help = "Set the record mode",required = false,default_value = "BOTH",value_hint = clap::ValueHint::Other)]
-    pub recording_mode: Option<RecordMode>,
+    /// Recording mode, choose between "primary", "clipboard", or the default "both"
+    #[arg(value_enum, name = "recording_mode", short = 'r', long = "recording_mode", help = "Set the record mode", required = false, default_value = "both", value_hint = clap::ValueHint::Other)]
+    // TODO: @refactor: This doesn't need to be an option - it has a default creation via Clap.
+    pub recording_mode: RecordingMode,
 }
 
 impl Default for Cli {
@@ -38,8 +38,8 @@ impl Cli {
 }
 
 #[derive(Debug, ValueEnum, Clone, Copy, PartialEq, Eq)]
-#[clap(name = "RecordMode", rename_all = "lower")]
-pub enum RecordMode {
+#[clap(name = "RecordingMode", rename_all = "lower")]
+pub enum RecordingMode {
     #[value(name = "primary", alias = "PRIMARY", alias = "0")]
     Primary,
     #[value(name = "clipboard", alias = "CLIPBOARD", alias = "1")]
@@ -48,52 +48,61 @@ pub enum RecordMode {
     Both,
 }
 
-impl FromStr for RecordMode {
+impl FromStr for RecordingMode {
     type Err = crate::error::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "primary" | "0" => Ok(RecordMode::Primary),
-            "clipboard" | "1" => Ok(RecordMode::Clipboard),
-            "both" | "2" => Ok(RecordMode::Both),
-            _ => Err(crate::error::Error::InvalidRecordMode(s.to_string())),
+            "primary" | "0" => Ok(RecordingMode::Primary),
+            "clipboard" | "1" => Ok(RecordingMode::Clipboard),
+            "both" | "2" => Ok(RecordingMode::Both),
+            _ => Err(crate::error::Error::InvalidRecordingMode(s.to_string())),
         }
     }
 }
 
-impl From<RecordMode> for Vec<String> {
-    fn from(mode: RecordMode) -> Self {
-        match mode {
-            RecordMode::Primary => vec!["primary".to_string()],
-            RecordMode::Clipboard => vec!["clipboard".to_string()],
-            RecordMode::Both => vec!["primary".to_string(), "clipboard".to_string()],
-        }
-    }
-}
+// TODO: @refactor: RecordingMode should be a standalone structure, moving it out of CLI asap at runtime.
+// These Into->Vec<String|&str> really shouldn't be on RecordingMode,
+// They're better as standalone structures that can be injected into other areas, and easier to test also.
 
-impl From<RecordMode> for Vec<&str> {
-    fn from(mode: RecordMode) -> Self {
-        match mode {
-            RecordMode::Primary => vec!["primary"],
-            RecordMode::Clipboard => vec!["clipboard"],
-            RecordMode::Both => vec!["primary", "clipboard"],
-        }
-    }
-}
+// impl From<RecordingMode> for Vec<String> {
+//     fn from(mode: RecordingMode) -> Self {
+//         match mode {
+//             RecordingMode::Primary => vec!["primary".to_string()],
+//             RecordingMode::Clipboard => vec!["clipboard".to_string()],
+//             RecordingMode::Both => vec!["primary".to_string(), "clipboard".to_string()],
+//         }
+//     }
+// }
+//
+// impl From<RecordingMode> for Vec<&str> {
+//     fn from(mode: RecordingMode) -> Self {
+//         match mode {
+//             RecordingMode::Primary => vec!["primary"],
+//             RecordingMode::Clipboard => vec!["clipboard"],
+//             RecordingMode::Both => vec!["primary", "clipboard"],
+//         }
+//     }
+// }
+//
+// impl From<RecordingMode> for String {
+//     fn from(mode: RecordingMode) -> Self {
+//         match mode {
+//             RecordingMode::Primary => "primary".to_string(),
+//             RecordingMode::Clipboard => "clipboard".to_string(),
+//             RecordingMode::Both => "both".to_string(),
+//         }
+//     }
+// }
 
-impl From<RecordMode> for String {
-    fn from(mode: RecordMode) -> Self {
-        match mode {
-            RecordMode::Primary => "primary".to_string(),
-            RecordMode::Clipboard => "clipboard".to_string(),
-            RecordMode::Both => "both".to_string(),
-        }
-    }
-}
-
-impl Display for RecordMode {
+impl Display for RecordingMode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", String::from(*self))
+        let s = match self {
+            RecordingMode::Primary => "primary",
+            RecordingMode::Clipboard => "clipboard",
+            RecordingMode::Both => "both",
+        };
+        write!(f, "{s}")
     }
 }
 

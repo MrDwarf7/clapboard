@@ -4,6 +4,12 @@ pub mod error;
 pub mod prelude;
 pub mod xdg_dirs;
 
+pub mod commands;
+pub mod filesystem;
+
+//
+pub mod clipboard;
+
 pub use std::fs;
 pub use std::fs::File;
 pub use std::io::{self, Read, Write, copy};

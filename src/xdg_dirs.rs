@@ -21,8 +21,12 @@ use crate::prelude::PathBuf;
 ///
 pub fn get_xdg_dir<T>(dir_type: T) -> crate::Result<PathBuf>
 where
-    T: Into<XdgDirType>,
+    T: TryInto<XdgDirType>,
+    // Into<XdgDirType>,
 {
+    let dir_type = dir_type
+        .try_into()
+        .map_err(|_| Error::InvalidXdgDirType("Failed to convert to XdgDirType".to_string()))?;
     BaseDirectories::with_prefix(crate_name!()).to_xdg_dir(dir_type)
 }
 
@@ -37,18 +41,21 @@ impl ToXdgDir for BaseDirectories {
     {
         match dir_type.into() {
             XdgDirType::Config => {
-                self.place_config_file(crate::prelude::CONFIGURATION_FILE_NAME)
-                    .map_err(|e| Error::Generic(format!("Failed to get config directory: {e}")))
+                match self.get_config_home() {
+                    Some(path) => Ok(path),
+                    None => Err(Error::Generic("Config home directory not available".to_string())),
+                }
+                // .map_err(|e| Error::Generic(format!("Failed to get config directory: {e}")))
             }
             XdgDirType::Data => {
                 match self.get_data_home() {
-                    Some(path) => Ok(path.join(crate::prelude::CONFIGURATION_FILE_NAME)),
+                    Some(path) => Ok(path),
                     None => Err(Error::Generic("Data home directory not available".to_string())),
                 }
             }
             XdgDirType::Cache => {
                 match self.get_cache_home() {
-                    Some(path) => Ok(path.join(crate::prelude::CONFIGURATION_FILE_NAME)),
+                    Some(path) => Ok(path),
                     None => Err(Error::Generic("Cache home directory not available".to_string())),
                 }
             }
@@ -63,24 +70,28 @@ pub enum XdgDirType {
     Cache,
 }
 
-impl From<&str> for XdgDirType {
-    fn from(s: &str) -> Self {
+impl TryFrom<&str> for XdgDirType {
+    type Error = Error;
+
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
         match s.to_lowercase().as_str() {
-            "config" => XdgDirType::Config,
-            "data" => XdgDirType::Data,
-            "cache" => XdgDirType::Cache,
-            _ => unimplemented!("XdgDirType::From<&str> called with unknown type: {s}"),
+            "config" => Ok(XdgDirType::Config),
+            "data" => Ok(XdgDirType::Data),
+            "cache" => Ok(XdgDirType::Cache),
+            _ => Err(Error::Generic(format!("Unknown XdgDirType: {s}"))),
         }
     }
 }
 
-impl From<String> for XdgDirType {
-    fn from(s: String) -> Self {
+impl TryFrom<String> for XdgDirType {
+    type Error = Error;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
         match s.to_lowercase().as_str() {
-            "config" => XdgDirType::Config,
-            "data" => XdgDirType::Data,
-            "cache" => XdgDirType::Cache,
-            _ => panic!("XdgDirType::From<String> called with unknown type: {s}"),
+            "config" => Ok(XdgDirType::Config),
+            "data" => Ok(XdgDirType::Data),
+            "cache" => Ok(XdgDirType::Cache),
+            _ => Err(Error::Generic(format!("Unknown XdgDirType: {s}"))),
         }
     }
 }

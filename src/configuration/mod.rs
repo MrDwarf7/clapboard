@@ -57,7 +57,9 @@ impl Configuration {
 impl Default for Configuration {
     fn default() -> Self {
         // TODO: @default_generation: I can re-write this and handle it a lot more gracefully lol
-        let path = get_xdg_dir("config").unwrap_or_else(|_| default_config_path());
+        let path = get_xdg_dir("config".to_string())
+            .unwrap_or_else(|_| default_config_path())
+            .join(CONFIGURATION_FILE_NAME);
         if !path.exists() {
             let parent = path.parent().unwrap(); // Parent has to exist, un call is safe, we panic otherwise
             std::fs::create_dir_all(parent).unwrap_or_else(|_| {
