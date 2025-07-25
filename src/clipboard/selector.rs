@@ -115,3 +115,62 @@ impl ClipboardSelector {
         }
     }
 }
+// src/clipboard/selector.rs
+use crate::clipboard::{ClipboardEntry, ContentType, SelectingConfig};
+use crate::prelude::{Error, Result};
+
+pub struct ClipboardSelector {
+    config: SelectingConfig,
+}
+
+impl ClipboardSelector {
+    pub fn new(config: SelectingConfig) -> Self {
+        Self { config }
+    }
+
+    pub async fn run_selection(&self) -> Result<()> {
+        let entries = self.load_clipboard_entries().await?;
+        let selected = self.launch_menu(entries).await?;
+
+        if let Some(entry) = selected {
+            self.copy_to_clipboard(entry).await?;
+        }
+
+        Ok(())
+    }
+
+    async fn load_clipboard_entries(&self) -> Result<Vec<ClipboardEntry>> {
+        let mut entries = Vec::new();
+
+        // Load from cache directory
+        // self.load_cached_entries(&mut entries).await?;
+        todo!("Implement loading cached entries");
+
+        // Add favorites
+        // self.add_favorite_entries(&mut entries);
+        todo!("Implement adding favorite entries");
+
+        Ok(entries)
+    }
+
+    async fn launch_menu(&self, entries: Vec<ClipboardEntry>) -> Result<Option<ClipboardEntry>> {
+        // Extract the launcher logic here
+        // Return the selected entry instead of just a string
+        todo!()
+    }
+
+    async fn copy_to_clipboard(&self, entry: ClipboardEntry) -> Result<()> {
+        match entry.content_type {
+            ContentType::Text(content) => {
+                // Handle text content
+            }
+            ContentType::Binary { timestamp } => {
+                // Handle binary content from cache
+            }
+            ContentType::Favorite(content) => {
+                // Handle favorite content
+            }
+        }
+        Ok(())
+    }
+}

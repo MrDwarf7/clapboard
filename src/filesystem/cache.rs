@@ -95,3 +95,37 @@ impl CacheManager {
         Ok(data_map)
     }
 }
+use crate::clipboard::ClipboardEntry;
+use crate::prelude::{Error, PathBuf, Result};
+
+pub struct CacheManager {
+    cache_dir: PathBuf,
+}
+
+impl CacheManager {
+    pub fn new(cache_dir: PathBuf) -> Self {
+        Self { cache_dir }
+    }
+
+    pub fn load_entries(&self) -> Result<Vec<ClipboardEntry>> {
+        let mut entries = self.read_cache_directory()?;
+        entries.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+        Ok(entries)
+    }
+
+    pub fn clean_history(&self, max_entries: usize) -> Result<()> {
+        // Move the existing clean_history function here
+        // Make it more robust with proper error handling
+        todo!()
+    }
+
+    pub fn save_clipboard_content(&self, content: &[u8], mime_type: &str) -> Result<String> {
+        // Extract the saving logic from listen_to_clipboard
+        todo!()
+    }
+
+    fn read_cache_directory(&self) -> Result<Vec<ClipboardEntry>> {
+        // Move and improve the iterate_entries logic here
+        todo!()
+    }
+}

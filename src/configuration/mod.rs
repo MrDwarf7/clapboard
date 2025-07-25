@@ -60,6 +60,7 @@ impl Default for Configuration {
         let path = get_xdg_dir("config".to_string())
             .unwrap_or_else(|_| default_config_path())
             .join(CONFIGURATION_FILE_NAME);
+        let path = get_xdg_dir("config").unwrap_or_else(|_| default_config_path());
         if !path.exists() {
             let parent = path.parent().unwrap(); // Parent has to exist, un call is safe, we panic otherwise
             std::fs::create_dir_all(parent).unwrap_or_else(|_| {
