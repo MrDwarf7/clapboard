@@ -94,6 +94,8 @@ impl ClipboardSelector {
                     }
                 }
                 if !sources.is_empty() {
+                    // TODO:
+                    todo!("Actual implementation required")
                     // This is not the right way to do this, but it's the only way with the current library
                     // opts.copy_multi(sources)?;
                 }

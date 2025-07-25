@@ -68,6 +68,7 @@ pub struct ClipboardEntry {
 #[derive(Debug, Clone)]
 pub enum ContentType {
     Text(String),
+    // Technically would allow us to store images etc. (like 'Copy Image' from browser or apps etc.)
     Binary { timestamp: String }, // data: Vec<u8>, // ??
     Favorite(String),             // Favorite { name: String, timestamp: String },
 }
