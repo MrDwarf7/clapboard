@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Favourites {
-    // Will need to make this invisible via Serde/Config
     #[serde(rename = "items", default, flatten)]
     pub items: HashMap<String, String>,
 }

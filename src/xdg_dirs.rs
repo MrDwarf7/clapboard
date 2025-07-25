@@ -22,7 +22,6 @@ use crate::prelude::PathBuf;
 pub fn get_xdg_dir<T>(dir_type: T) -> crate::Result<PathBuf>
 where
     T: TryInto<XdgDirType>,
-    // Into<XdgDirType>,
 {
     let dir_type = dir_type
         .try_into()
@@ -45,7 +44,6 @@ impl ToXdgDir for BaseDirectories {
                     Some(path) => Ok(path),
                     None => Err(Error::Generic("Config home directory not available".to_string())),
                 }
-                // .map_err(|e| Error::Generic(format!("Failed to get config directory: {e}")))
             }
             XdgDirType::Data => {
                 match self.get_data_home() {

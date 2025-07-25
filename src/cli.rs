@@ -20,13 +20,11 @@ styles=get_styles(),
 pub struct Cli {
     /// Recording mode, choose between "primary", "clipboard", or the default "both"
     #[arg(value_enum, name = "recording_mode", short = 'r', long = "recording_mode", help = "Set the record mode", required = false, default_value = "both", value_hint = clap::ValueHint::Other)]
-    // TODO: @refactor: This doesn't need to be an option - it has a default creation via Clap.
     pub recording_mode: RecordingMode,
 }
 
 impl Default for Cli {
     fn default() -> Self {
-        // Prefer deferring to the new impl. incase we want to add additional logic.
         Self::new()
     }
 }
@@ -60,40 +58,6 @@ impl FromStr for RecordingMode {
         }
     }
 }
-
-// TODO: @refactor: RecordingMode should be a standalone structure, moving it out of CLI asap at runtime.
-// These Into->Vec<String|&str> really shouldn't be on RecordingMode,
-// They're better as standalone structures that can be injected into other areas, and easier to test also.
-
-// impl From<RecordingMode> for Vec<String> {
-//     fn from(mode: RecordingMode) -> Self {
-//         match mode {
-//             RecordingMode::Primary => vec!["primary".to_string()],
-//             RecordingMode::Clipboard => vec!["clipboard".to_string()],
-//             RecordingMode::Both => vec!["primary".to_string(), "clipboard".to_string()],
-//         }
-//     }
-// }
-//
-// impl From<RecordingMode> for Vec<&str> {
-//     fn from(mode: RecordingMode) -> Self {
-//         match mode {
-//             RecordingMode::Primary => vec!["primary"],
-//             RecordingMode::Clipboard => vec!["clipboard"],
-//             RecordingMode::Both => vec!["primary", "clipboard"],
-//         }
-//     }
-// }
-//
-// impl From<RecordingMode> for String {
-//     fn from(mode: RecordingMode) -> Self {
-//         match mode {
-//             RecordingMode::Primary => "primary".to_string(),
-//             RecordingMode::Clipboard => "clipboard".to_string(),
-//             RecordingMode::Both => "both".to_string(),
-//         }
-//     }
-// }
 
 impl Display for RecordingMode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

@@ -1,5 +1,3 @@
-use std::fs::DirEntry;
-
 use clapboard::clipboard::ClipboardMode;
 use clapboard::commands::CommandOrchestrator;
 use clapboard::configuration::Configuration;
